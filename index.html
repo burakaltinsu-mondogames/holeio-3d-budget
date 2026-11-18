@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hole.io 3D Bütçesi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Hole.io 2.58.3 APK'sındaki 3D asset'lerin ölçümü: kategori başına üçgen, doku, shader, LOD ve sahne bütçesi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: one reading column (measurement sheet), wide tables scroll inside their own frames. */
+:root{
+  --bg:#eef0ed; --surface:#fbfcfa; --ink:#14191d; --muted:#58626a; --line:#d3d8d2; --soft:#e3e7e1;
+  --obs:#1d4ed0; --obs-bg:#e2e9fb; --inf:#9a5a00; --inf-bg:#f6ead6; --na:#9b2f2f; --na-bg:#f6e1df;
+  --bar0:#14191d; --bar1:#1d4ed0; --bar2:#7f9be6;
+  --f-head:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1214; --surface:#151a1d; --ink:#e4e8ea; --muted:#98a2a9; --line:#2a3237; --soft:#1d2428;
+  --obs:#86a6ff; --obs-bg:#1b2747; --inf:#e6a54a; --inf-bg:#3a2b14; --na:#ee8b84; --na-bg:#3d1d1c;
+  --bar0:#e4e8ea; --bar1:#86a6ff; --bar2:#3f5592; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1214; --surface:#151a1d; --ink:#e4e8ea; --muted:#98a2a9; --line:#2a3237; --soft:#1d2428;
+  --obs:#86a6ff; --obs-bg:#1b2747; --inf:#e6a54a; --inf-bg:#3a2b14; --na:#ee8b84; --na-bg:#3d1d1c;
+  --bar0:#e4e8ea; --bar1:#86a6ff; --bar2:#3f5592; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:1080px;margin:0 auto}
+header.top{padding-block:48px 28px;border-bottom:2px solid var(--ink);display:grid;gap:14px}
+.kicker{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);letter-spacing:.04em}
+h1{font-family:var(--f-head);font-weight:700;font-size:clamp(2.3rem,6vw,3.6rem);line-height:1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.lede{max-width:68ch;margin:0;font-size:1.06rem}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 18px;padding-block:14px;border-bottom:1px solid var(--line);font-size:13.5px}
+nav.toc a{color:var(--muted);text-decoration:none}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--obs);text-decoration:underline}
+a{color:var(--obs)}
+:focus-visible{outline:2px solid var(--obs);outline-offset:2px}
+section{padding-block:40px 8px;display:grid;gap:16px}
+h2{font-family:var(--f-head);font-weight:600;font-size:1.75rem;line-height:1.15;margin:0;text-wrap:balance}
+h3{font-family:var(--f-head);font-weight:600;font-size:1.2rem;margin:10px 0 0}
+p{margin:0;max-width:72ch}
+.secnum{font-family:var(--f-mono);font-size:13px;color:var(--muted);margin-right:10px;font-weight:400}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:1px 7px;border-radius:3px;vertical-align:2px;white-space:nowrap}
+.tag.obs{color:var(--obs);background:var(--obs-bg)}
+.tag.inf{color:var(--inf);background:var(--inf-bg)}
+.tag.na{color:var(--na);background:var(--na-bg)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13.5px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.stat{background:var(--surface);padding:14px 16px;display:grid;gap:4px;align-content:start;min-width:0}
+.stat b{font-family:var(--f-mono);font-weight:500;font-size:1.45rem;line-height:1.15;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+.tw{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;border-bottom:1px solid var(--soft);text-align:left;vertical-align:top}
+thead th{font-family:var(--f-head);font-weight:600;font-size:13px;letter-spacing:.02em;background:var(--soft);border-bottom:1px solid var(--line);white-space:nowrap}
+thead th.est{color:var(--inf)}
+tbody tr:last-child td,tbody tr:last-child th{border-bottom:0}
+tbody th{font-weight:600;white-space:nowrap}
+td.num{text-align:right;white-space:nowrap;font-family:var(--f-mono);font-size:12.8px}
+td.est{color:var(--inf)}
+.mono{font-family:var(--f-mono);font-size:12.6px}
+.sub{display:block;font-family:var(--f-body);font-size:11.5px;color:var(--muted);white-space:normal}
+.note{font-size:13px;color:var(--muted);max-width:80ch}
+ul.facts{margin:0;padding-left:0;list-style:none;display:grid;gap:10px;max-width:80ch}
+ul.facts li{padding-left:0}
+ul.facts li .tag{margin-right:8px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px}
+.two>div{min-width:0;display:grid;gap:10px;align-content:start}
+.chart{width:100%;height:auto;display:block}
+.cbox{border:1px solid var(--line);background:var(--surface);padding:14px 14px 6px}
+.chart .grid{stroke:var(--soft);stroke-width:1}
+.chart .axis{fill:var(--muted);font:12px var(--f-mono)}
+.chart .lab{fill:var(--ink);font:13px var(--f-body)}
+.chart .val{fill:var(--ink);font:12.5px var(--f-mono)}
+.chart .val.sm{font-size:11px;fill:var(--muted)}
+.chart .rng{stroke:var(--muted);stroke-width:2}
+.chart .cap{stroke:var(--muted);stroke-width:2}
+.chart .med{fill:var(--obs);stroke:var(--surface);stroke-width:2}
+.chart .avg{fill:var(--inf)}
+.chart .l0{fill:var(--bar0)} .chart .l1{fill:var(--bar1)} .chart .l2{fill:var(--bar2)}
+.keyrow{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--muted);padding:6px 2px 4px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin-right:6px}
+.sw.sq{border-radius:1px;width:4px;height:12px}
+ol.steps{margin:0;padding-left:22px;display:grid;gap:8px;max-width:80ch}
+.callout{border-left:3px solid var(--inf);padding:10px 14px;background:var(--surface);max-width:80ch;font-size:14.5px}
+footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+@media (max-width:560px){body{font-size:15px}th,td{padding:7px 8px}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header class="top">
+  <div class="kicker">io.voodoo.holeio · sürüm 2.58.3 · Android XAPK · Unity 6000.3.21f1 · IL2CPP · URP</div>
+  <h1>Hole.io 3D Bütçesi</h1>
+  <p class="lede">APK'daki 3D asset'lerin ölçümü: kategori başına üçgen ve vertex, doku çözünürlüğü ve formatı, shader, atlas paylaşımı, LOD ve harita başına çizim yükü. Amaç, Scenario ve Tripo ile ürettiğimiz asset'leri aynı bütçeye oturtmak. Model, doku ya da ses dışa aktarılmadı; sayfada yalnız sayılar ve gözlemler var.</p>
+  <div class="legend">
+    <span><span class="tag obs">Gözlem</span> dosyadan doğrudan okunan değer</span>
+    <span><span class="tag inf">Çıkarım</span> ölçümden yapılan yorum ya da tahmin</span>
+    <span><span class="tag na">Okunamadı</span> APK'da açıkça yok</span>
+  </div>
+</header>
+<nav class="toc" aria-label="Bölümler">
+  <a href="#ozet">Özet</a><a href="#kategori">Kategori tablosu</a><a href="#dagilim">Üçgen dağılımı</a><a href="#lod">LOD</a>
+  <a href="#toplam">Toplamlar</a><a href="#teknik">Mesh ayarları</a><a href="#sahne">Sahne ve çizim</a><a href="#stil">Stil kuralları</a>
+  <a href="#oneri">Bizim için öneri</a><a href="#okunamadi">Okunamadı</a><a href="#yontem">Yöntem</a>
+</nav>
+
+<section id="ozet">
+  <h2><span class="secnum">1</span>Özet</h2>
+  <div class="stats">
+    <div class="stat"><b>1.271</b><span>oyunda kullanılan benzersiz mesh (APK'da 1.581 Mesh nesnesi)</span></div>
+    <div class="stat"><b>1.227 · 1.801 · 766</b><span>medyan LOD0 üçgen: araba · insan · ağaç</span></div>
+    <div class="stat"><b>907 · 312</b><span>medyan LOD0 üçgen: bina parçası · sokak eşyası</span></div>
+    <div class="stat"><b>1 atlas → 333 mesh</b><span>1024² ETC2 RGB palet/gradyan atlası, 0,67 MB</span></div>
+    <div class="stat"><b>0 · 6 · 11</b><span>LOD değişim eşikleri (delik seviyesi)</span></div>
+    <div class="stat"><b>0 lightmap</b><span>tek realtime directional ışık, sert gölge, dünya objelerinde normal map yok</span></div>
+  </div>
+  <ul class="facts">
+    <li><span class="tag obs">Gözlem</span>Şehir biyomundaki neredeyse her obje tek bir uber shader (<span class="mono">Hole/Master Shader</span>) ve tek bir 1024² doku atlası kullanıyor. Şehir haritalarındaki 37.218 renderer-materyal slotunun %97,6'sı bu shader'da.</li>
+    <li><span class="tag obs">Gözlem</span>Unity'nin kendi LODGroup bileşeni tüm APK'da yalnız 1 kez var. LOD işini oyunun kendi sistemi yapıyor: 21.362 <span class="mono">LODMeshSwitcher</span>, her biri en fazla 3 mesh tutuyor. <span class="mono">LODManager</span> eşikleri delik seviyesi 0, 6 ve 11.</li>
+    <li><span class="tag obs">Gözlem</span>İnsanlar iskeletle değil vertex animation texture (VAT) ile oynatılıyor: 871 <span class="mono">VertexTextureAnimator</span>, 347 klip, çoğu 15 fps.</li>
+    <li><span class="tag obs">Gözlem</span>Bir şehir haritası 414 ile 4.410 arası aktif renderer ve 4 ile 13 arası materyal içeriyor. Statik batching şehir haritalarında kullanılmamış; build sürecinde üretilen City haritasında zemin ~100 m'lik 14 hücreye birleştirilmiş.</li>
+    <li><span class="tag inf">Çıkarım</span>Mesh'lerin çoğunda üçgenlerin UV alanı sıfır: her yüz atlasta tek bir renge bakıyor. Renk, doku detayıyla değil palet + gradyan atlası ile veriliyor.</li>
+  </ul>
+</section>
+
+<section id="kategori">
+  <h2><span class="secnum">2</span>Kategori tablosu</h2>
+  <p>Her kategoriden ortanca büyüklükte, oyunda gerçekten kullanılan bir örnek. Üçgen ve vertex LOD0 içindir; LOD sütunu aynı objenin LOD0 → LOD1 → LOD2 zinciri. <span class="tag obs">Gözlem</span></p>
+  <div class="tw"><table>
+    <thead><tr><th>Kategori</th><th>Örnek obje</th><th>Üçgen</th><th>Vertex</th><th>Doku / format</th><th>Shader</th><th>Atlas paylaşımı</th><th>LOD (üçgen)</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Araba</th><td class="mono">City_Vehicles_S_Taxi</td><td class="num">1.142</td><td class="num">1.415</td><td>tex_city_generic_atlas<span class="sub">1024² ETC2 RGB, mip 11</span></td><td class="mono">Hole/Master Shader<span class="sub">lit, _MS_USE_TEXTURE</span></td><td>333 mesh aynı atlas</td><td class="num">1.142 → 614 → 372</td></tr>
+      <tr><th scope="row">İnsan</th><td class="mono">Character_Male_Police</td><td class="num">2.128<span class="sub">VAT mesh: 1.908</span></td><td class="num">5.133<span class="sub">VAT mesh: 1.259</span></td><td>PolygonCity_Texture_01_A<span class="sub">1024² ETC2 RGBA8 Crunched, mip yok + VAT atlası 1259×385 RGB24</span></td><td class="mono">Hole/Master Shader<span class="sub">_MS_USE_VAT</span></td><td>21 mesh aynı doku</td><td class="num">2.128 → 588 → 102</td></tr>
+      <tr><th scope="row">Ağaç / bitki</th><td class="mono">City_Vegetation_M_PineTree</td><td class="num">968</td><td class="num">969</td><td>tex_city_generic_atlas<span class="sub">1024² ETC2 RGB</span></td><td class="mono">Hole/Master Shader</td><td>333 mesh aynı atlas</td><td class="num">968 → 560 → 240</td></tr>
+      <tr><th scope="row">Bina</th><td class="mono">city_appartments_M_base_red<span class="sub">modüler kat parçası</span></td><td class="num">907</td><td class="num">1.166</td><td>tex_city_generic_atlas<span class="sub">1024² ETC2 RGB + vertex color kanalı</span></td><td class="mono">Hole/Master Shader</td><td>333 mesh aynı atlas</td><td class="num">907 → 571 → 317</td></tr>
+      <tr><th scope="row">Sokak eşyası</th><td class="mono">City_Props_S_TrashBin</td><td class="num">312</td><td class="num">408</td><td>tex_city_generic_atlas<span class="sub">1024² ETC2 RGB</span></td><td class="mono">Hole/Master Shader</td><td>333 mesh aynı atlas</td><td class="num">312 → 186 → 88</td></tr>
+      <tr><th scope="row">Küçük obje (şehir)</th><td class="mono">City_Props_S_Cone</td><td class="num">84</td><td class="num">111</td><td>tex_city_generic_atlas<span class="sub">1024² ETC2 RGB</span></td><td class="mono">Hole/Master Shader</td><td>333 mesh aynı atlas</td><td class="num">84 → 40 → 24</td></tr>
+      <tr><th scope="row">Küçük obje (yiyecek)</th><td class="mono">Orange<span class="sub">meyve biyomu</span></td><td class="num">256</td><td class="num">170</td><td>Orange<span class="sub">512² ETC2 RGB, mip 10, objeye özel</span></td><td class="mono">Hole/Master Shader</td><td>yok (kendi dokusu)</td><td class="num">LOD yok</td></tr>
+      <tr><th scope="row">Zemin / yol</th><td class="mono">City_Terrain_01<span class="sub">5 × 5 m karo</span></td><td class="num">22</td><td class="num">28</td><td>tex_city_atlas<span class="sub">512² ETC2 RGB, mip 10, alpha test</span></td><td class="mono">Hole/Master Shader<span class="sub">_ALPHATEST_ON, _MS_USE_GLOW</span></td><td>57 mesh aynı atlas</td><td class="num">22 → 13 → 2</td></tr>
+      <tr><th scope="row">Zemin hücresi</th><td class="mono">Static_GridCell_0_0<span class="sub">~105 × 101 m, City haritasında önceden birleşik</span></td><td class="num">5.911</td><td class="num">7.894</td><td>tex_city_atlas<span class="sub">512² ETC2 RGB</span></td><td class="mono">Hole/Master Shader</td><td>zemin atlası</td><td class="num">LOD yok</td></tr>
+      <tr><th scope="row">Oyuncu deliği</th><td class="mono">Hole_default_tube + Hole_default_cap</td><td class="num">352 + 1.152</td><td class="num">193 + 1.234</td><td>Hole_Default_New<span class="sub">512² ETC2 RGB, 13 skin materyali paylaşıyor</span></td><td class="mono">Hole/Master Shader<span class="sub">_MS_FORCE_UNLIT + Hole Xray, stencil maske</span></td><td>13 skin aynı doku</td><td class="num">LOD yok</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Ortak atlas sayısı, o dokuyu ana doku olarak kullanan farklı mesh adı sayısıdır (LOD seviyeleri ayrı sayılmaz). İnsan LOD0 mesh'i mesh compression High ile saklandığı için vertex sayısı açılmış veriden ölçüldü.</p>
+</section>
+
+<section id="dagilim">
+  <h2><span class="secnum">3</span>Kategori başına üçgen dağılımı</h2>
+  <p>Oyunda kullanılan benzersiz LOD0 mesh'ler üzerinden en küçük, medyan, ortalama ve en büyük üçgen sayısı. <span class="tag obs">Gözlem</span> Kategori ataması isimden yapıldı (ör. <span class="mono">City_Vehicles_*</span>, <span class="mono">*_Vegetation_*</span>), bu yüzden sınırdaki birkaç obje başka kategoriye düşmüş olabilir. <span class="tag inf">Çıkarım</span></p>
+  <div class="cbox">
+    <svg class="chart" viewBox="0 0 760 298" role="img" aria-label="Kategori başına LOD0 üçgen aralığı, logaritmik ölçek"><line class="grid" x1="150.0" x2="150.0" y1="22" y2="272"/><text class="axis" x="150.0" y="290" text-anchor="middle">1</text><line class="grid" x1="275.6" x2="275.6" y1="22" y2="272"/><text class="axis" x="275.6" y="290" text-anchor="middle">10</text><line class="grid" x1="401.1" x2="401.1" y1="22" y2="272"/><text class="axis" x="401.1" y="290" text-anchor="middle">100</text><line class="grid" x1="526.7" x2="526.7" y1="22" y2="272"/><text class="axis" x="526.7" y="290" text-anchor="middle">1k</text><line class="grid" x1="652.2" x2="652.2" y1="22" y2="272"/><text class="axis" x="652.2" y="290" text-anchor="middle">10k</text><text class="lab" x="138" y="51.0" text-anchor="end">Araba / araç</text><line class="rng" x1="446.0" x2="556.4" y1="47.0" y2="47.0"/><line class="cap" x1="446.0" x2="446.0" y1="41.0" y2="53.0"/><line class="cap" x1="556.4" x2="556.4" y1="41.0" y2="53.0"/><rect class="avg" x="535.5" y="38.0" width="3" height="18"/><circle class="med" cx="537.8" cy="47.0" r="5.5"/><text class="val" x="698" y="51.0">1.227</text><text class="lab" x="138" y="85.0" text-anchor="end">İnsan / canlı</text><line class="rng" x1="499.0" x2="575.6" y1="81.0" y2="81.0"/><line class="cap" x1="499.0" x2="499.0" y1="75.0" y2="87.0"/><line class="cap" x1="575.6" x2="575.6" y1="75.0" y2="87.0"/><rect class="avg" x="554.4" y="72.0" width="3" height="18"/><circle class="med" cx="558.7" cy="81.0" r="5.5"/><text class="val" x="698" y="85.0">1.801</text><text class="lab" x="138" y="119.0" text-anchor="end">Ağaç / bitki</text><line class="rng" x1="369.5" x2="573.1" y1="115.0" y2="115.0"/><line class="cap" x1="369.5" x2="369.5" y1="109.0" y2="121.0"/><line class="cap" x1="573.1" x2="573.1" y1="109.0" y2="121.0"/><rect class="avg" x="512.6" y="106.0" width="3" height="18"/><circle class="med" cx="512.1" cy="115.0" r="5.5"/><text class="val" x="698" y="119.0">766</text><text class="lab" x="138" y="153.0" text-anchor="end">Bina</text><line class="rng" x1="293.9" x2="683.2" y1="149.0" y2="149.0"/><line class="cap" x1="293.9" x2="293.9" y1="143.0" y2="155.0"/><line class="cap" x1="683.2" x2="683.2" y1="143.0" y2="155.0"/><rect class="avg" x="567.6" y="140.0" width="3" height="18"/><circle class="med" cx="521.3" cy="149.0" r="5.5"/><text class="val" x="698" y="153.0">907</text><text class="lab" x="138" y="187.0" text-anchor="end">Sokak eşyası</text><line class="rng" x1="187.8" x2="606.4" y1="183.0" y2="183.0"/><line class="cap" x1="187.8" x2="187.8" y1="177.0" y2="189.0"/><line class="cap" x1="606.4" x2="606.4" y1="177.0" y2="189.0"/><rect class="avg" x="492.6" y="174.0" width="3" height="18"/><circle class="med" cx="463.1" cy="183.0" r="5.5"/><text class="val" x="698" y="187.0">312</text><text class="lab" x="138" y="221.0" text-anchor="end">Küçük obje</text><line class="rng" x1="348.3" x2="529.0" y1="217.0" y2="217.0"/><line class="cap" x1="348.3" x2="348.3" y1="211.0" y2="223.0"/><line class="cap" x1="529.0" x2="529.0" y1="211.0" y2="223.0"/><rect class="avg" x="473.4" y="208.0" width="3" height="18"/><circle class="med" cx="464.7" cy="217.0" r="5.5"/><text class="val" x="698" y="221.0">321</text><text class="lab" x="138" y="255.0" text-anchor="end">Zemin / yol / su</text><line class="rng" x1="150.0" x2="575.1" y1="251.0" y2="251.0"/><line class="cap" x1="150.0" x2="150.0" y1="245.0" y2="257.0"/><line class="cap" x1="575.1" x2="575.1" y1="245.0" y2="257.0"/><rect class="avg" x="419.5" y="242.0" width="3" height="18"/><circle class="med" cx="313.3" cy="251.0" r="5.5"/><text class="val" x="698" y="255.0">20</text><text class="axis" x="698" y="16">medyan</text></svg>
+    <div class="keyrow"><span><span class="sw" style="background:var(--obs)"></span>medyan</span><span><span class="sw sq" style="background:var(--inf)"></span>ortalama</span><span>çizgi: en küçük – en büyük · logaritmik ölçek</span></div>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Kategori</th><th>Mesh</th><th>En küçük</th><th>Medyan</th><th>Ortalama</th><th>En büyük</th><th>Medyan vertex</th><th>LOD1 / LOD2 oranı</th><th>Ort. bellek (LOD0)</th></tr></thead>
+    <tbody><tr><th scope="row">Araba / araç</th><td class="num">16</td><td class="num">228<span class="sub">City_Beach_Boat_01</span></td><td class="num">1.227</td><td class="num">1.209</td><td class="num">1.726<span class="sub">Sports_Props_S_FoodTruck</span></td><td class="num">1.411</td><td class="num">%54 / %33</td><td class="num">44,6 KB</td></tr>
+<tr><th scope="row">İnsan / canlı</th><td class="num">23</td><td class="num">602<span class="sub">penguin</span></td><td class="num">1.801</td><td class="num">1.711</td><td class="num">2.456<span class="sub">Sport_HumanFemale_SupporterRed</span></td><td class="num">1.393</td><td class="num">%28 / %4</td><td class="num">41,8 KB</td></tr>
+<tr><th scope="row">Ağaç / bitki</th><td class="num">41</td><td class="num">56<span class="sub">City_Park_TreeBroken_L_01</span></td><td class="num">766</td><td class="num">795</td><td class="num">2.346<span class="sub">Park_Vegetation_M_archway_flower</span></td><td class="num">751</td><td class="num">%58 / %23</td><td class="num">22,5 KB</td></tr>
+<tr><th scope="row">Bina</th><td class="num">101</td><td class="num">14<span class="sub">City_Attachments_SignWall_02</span></td><td class="num">907</td><td class="num">2.180</td><td class="num">17.661<span class="sub">City_Building_Theater</span></td><td class="num">1.166</td><td class="num">%67 / %36</td><td class="num">95,5 KB</td></tr>
+<tr><th scope="row">Sokak eşyası</th><td class="num">213</td><td class="num">2<span class="sub">City_Beach_Towel_06</span></td><td class="num">312</td><td class="num">550</td><td class="num">4.316<span class="sub">Beach_Props_M_Shipwreck</span></td><td class="num">408</td><td class="num">%56 / %28</td><td class="num">20,0 KB</td></tr>
+<tr><th scope="row">Küçük obje</th><td class="num">64</td><td class="num">38<span class="sub">Cucumber_Slice</span></td><td class="num">321</td><td class="num">387</td><td class="num">1.044<span class="sub">Park_Props_S_ChessRook_White</span></td><td class="num">305</td><td class="num">%60 / %29</td><td class="num">12,2 KB</td></tr>
+<tr><th scope="row">Zemin / yol / su</th><td class="num">118</td><td class="num">1<span class="sub">Beach_Tile_5_5_Triangle</span></td><td class="num">20</td><td class="num">144</td><td class="num">2.432<span class="sub">Dirt_Path</span></td><td class="num">27</td><td class="num">%86 / %60</td><td class="num">5,3 KB</td></tr>
+<tr><th scope="row">Oyuncu deliği</th><td class="num">3</td><td class="num">64<span class="sub">hole_eat_andmark_fx_cilinder</span></td><td class="num">224</td><td class="num">235</td><td class="num">416<span class="sub">Hole_E2B_Geometry</span></td><td class="num">166</td><td class="num">—</td><td class="num">7,2 KB</td></tr></tbody>
+  </table></div>
+  <p class="note">Bina ortalamasını landmark binalar yukarı çekiyor (Theater 17.661, Fountain 15.134, Stadium 12.286). Standart şehir binaları modüler kat parçalarından (Base / Mid / Roof) kuruluyor; tek parça medyanı 907. Zemin medyanı 20 üçgen: yol ve kaldırım karoları birkaç düz quad. Bellek, mesh'in saklanan vertex + index verisidir.</p>
+</section>
+
+<section id="lod">
+  <h2><span class="secnum">4</span>LOD sistemi</h2>
+  <div class="two">
+    <div>
+      <ul class="facts">
+        <li><span class="tag obs">Gözlem</span>Unity LODGroup: tüm APK'da 1 adet (<span class="mono">City_Building_M_Parking_01</span>).</li>
+        <li><span class="tag obs">Gözlem</span>Oyunun kendi sistemi: 21.349 özel <span class="mono">LODGroup</span> + 21.362 <span class="mono">LODMeshSwitcher</span>. 325 farklı LOD zinciri var: 299'u 3 seviyeli, 14'ü 2, 12'si tek seviye.</li>
+        <li><span class="tag obs">Gözlem</span><span class="mono">LODManager.m_lodHoleLevels = [0, 6, 11]</span> ve bir dither dokusu. URP'de LOD cross-fade açık (dither).</li>
+        <li><span class="tag inf">Çıkarım</span>LOD ekran boyutuna göre değil delik seviyesine göre seçiliyor. Delik büyüdükçe kamera uzaklaşıyor ve sahne topluca bir alt LOD'a iniyor: seviye 0–5 LOD0, 6–10 LOD1, 11+ LOD2.</li>
+        <li><span class="tag obs">Gözlem</span>İnsan LOD'ları <span class="mono">"simplified mesh"</span> adında, sert inişli: 2.128 → 588 → 102 (%28 / %5). Bazı landmark'larda LOD inmiyor: Fountain ve Stadium üç seviyede de aynı mesh.</li>
+        <li><span class="tag inf">Çıkarım</span><span class="mono">LOD10</span>, <span class="mono">LOD50</span>, <span class="mono">simplified mesh</span> adları otomatik decimation aracına işaret ediyor.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="cbox">
+        <svg class="chart" viewBox="0 0 760 340" role="img" aria-label="LOD1 ve LOD2 üçgen oranı, LOD0 = %100"><text class="lab" x="138" y="30" text-anchor="end">Araba / araç</text><rect class="l0" x="150" y="14" width="590.0" height="9" rx="1.5"/><rect class="l1" x="150" y="25" width="318.6" height="9" rx="1.5"/><text class="val sm" x="474.6" y="33">LOD1 %54</text><rect class="l2" x="150" y="36" width="194.7" height="9" rx="1.5"/><text class="val sm" x="350.7" y="44">LOD2 %33</text><text class="lab" x="138" y="76" text-anchor="end">İnsan / canlı</text><rect class="l0" x="150" y="60" width="590.0" height="9" rx="1.5"/><rect class="l1" x="150" y="71" width="165.2" height="9" rx="1.5"/><text class="val sm" x="321.2" y="79">LOD1 %28</text><rect class="l2" x="150" y="82" width="23.6" height="9" rx="1.5"/><text class="val sm" x="179.6" y="90">LOD2 %4</text><text class="lab" x="138" y="122" text-anchor="end">Ağaç / bitki</text><rect class="l0" x="150" y="106" width="590.0" height="9" rx="1.5"/><rect class="l1" x="150" y="117" width="342.2" height="9" rx="1.5"/><text class="val sm" x="498.2" y="125">LOD1 %58</text><rect class="l2" x="150" y="128" width="135.7" height="9" rx="1.5"/><text class="val sm" x="291.7" y="136">LOD2 %23</text><text class="lab" x="138" y="168" text-anchor="end">Bina</text><rect class="l0" x="150" y="152" width="590.0" height="9" rx="1.5"/><rect class="l1" x="150" y="163" width="395.3" height="9" rx="1.5"/><text class="val sm" x="551.3" y="171">LOD1 %67</text><rect class="l2" x="150" y="174" width="212.4" height="9" rx="1.5"/><text class="val sm" x="368.4" y="182">LOD2 %36</text><text class="lab" x="138" y="214" text-anchor="end">Sokak eşyası</text><rect class="l0" x="150" y="198" width="590.0" height="9" rx="1.5"/><rect class="l1" x="150" y="209" width="330.4" height="9" rx="1.5"/><text class="val sm" x="486.4" y="217">LOD1 %56</text><rect class="l2" x="150" y="220" width="165.2" height="9" rx="1.5"/><text class="val sm" x="321.2" y="228">LOD2 %28</text><text class="lab" x="138" y="260" text-anchor="end">Küçük obje</text><rect class="l0" x="150" y="244" width="590.0" height="9" rx="1.5"/><rect class="l1" x="150" y="255" width="354.0" height="9" rx="1.5"/><text class="val sm" x="510.0" y="263">LOD1 %60</text><rect class="l2" x="150" y="266" width="171.1" height="9" rx="1.5"/><text class="val sm" x="327.1" y="274">LOD2 %29</text><text class="lab" x="138" y="306" text-anchor="end">Zemin / yol / su</text><rect class="l0" x="150" y="290" width="590.0" height="9" rx="1.5"/><rect class="l1" x="150" y="301" width="507.4" height="9" rx="1.5"/><text class="val sm" x="663.4" y="309">LOD1 %86</text><rect class="l2" x="150" y="312" width="354.0" height="9" rx="1.5"/><text class="val sm" x="510.0" y="320">LOD2 %60</text></svg>
+        <div class="keyrow"><span><span class="sw sq" style="background:var(--bar0)"></span>LOD0 = %100</span><span><span class="sw sq" style="background:var(--bar1)"></span>LOD1</span><span><span class="sw sq" style="background:var(--bar2)"></span>LOD2</span><span>medyan oran</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="toplam">
+  <h2><span class="secnum">5</span>Toplamlar</h2>
+  <div class="stats">
+    <div class="stat"><b>1.581</b><span>Mesh nesnesi (1.531 benzersiz ad + boyut)</span></div>
+    <div class="stat"><b>1.046.738</b><span>tüm benzersiz mesh'lerin üçgen toplamı (1.275.935 vertex)</span></div>
+    <div class="stat"><b>925.399</b><span>oyunda kullanılan 1.271 mesh'in üçgeni (bütün LOD seviyeleri dahil)</span></div>
+    <div class="stat"><b>~42 MB</b><span>benzersiz mesh'lerin saklanan vertex + index verisi</span></div>
+    <div class="stat"><b>1.221 doku · 215,5 MB</b><span>tüm benzersiz dokular (UI dahil, mip dahil)</span></div>
+    <div class="stat"><b>89 doku · 66,6 MB</b><span>3D dünya materyallerinin dokuları</span></div>
+  </div>
+  <div class="two">
+    <div>
+      <h3>En büyük 10 mesh (oyunda kullanılan)</h3>
+      <div class="tw"><table>
+        <thead><tr><th>#</th><th>Mesh</th><th>Üçgen</th><th>Vertex</th><th>LOD zinciri</th><th>Boyut</th></tr></thead>
+        <tbody><tr><td class="num">1</td><td class="mono">City_Building_Theater</td><td class="num">17.661</td><td class="num">35.439</td><td class="num">tek seviye</td><td class="num">23 × 24 × 16 m</td></tr>
+<tr><td class="num">2</td><td class="mono">City_Building_M_05</td><td class="num">16.656</td><td class="num">23.476</td><td class="num">16.656 → 10.098 → 2.663</td><td class="num">14 × 58 × 13 m</td></tr>
+<tr><td class="num">3</td><td class="mono">Park_Building_L_Fountain</td><td class="num">15.134</td><td class="num">13.570</td><td class="num">15.134 → 15.134 → 15.134</td><td class="num">40 × 48 × 38 m</td></tr>
+<tr><td class="num">4</td><td class="mono">Sports_Buildings_XL_Stadium</td><td class="num">12.286</td><td class="num">12.361</td><td class="num">12.286 → 12.286 → 12.286</td><td class="num">49 × 48 × 48 m</td></tr>
+<tr><td class="num">5</td><td class="mono">NYC_Buildings_XL_ChryslerCenterBuilding</td><td class="num">11.675</td><td class="num">14.896</td><td class="num">tek seviye</td><td class="num">20 × 101 × 19 m</td></tr>
+<tr><td class="num">6</td><td class="mono">City_Building_M_02_A</td><td class="num">8.752</td><td class="num">15.577</td><td class="num">8.752 → 5.674 → 3.108</td><td class="num">13 × 29 × 12 m</td></tr>
+<tr><td class="num">7</td><td class="mono">Beach_Building_XL_Titanic</td><td class="num">8.315</td><td class="num">8.257</td><td class="num">8.315 → 6.321 → 2.311</td><td class="num">30 × 55 × 39 m</td></tr>
+<tr><td class="num">8</td><td class="mono">City_Building_XL_TownHall</td><td class="num">7.638</td><td class="num">8.218</td><td class="num">7.638 → 4.610 → 1.687</td><td class="num">18 × 24 × 16 m</td></tr>
+<tr><td class="num">9</td><td class="mono">Beach_Building_L_Aquarium</td><td class="num">5.928</td><td class="num">6.188</td><td class="num">tek seviye</td><td class="num">19 × 19 × 20 m</td></tr>
+<tr><td class="num">10</td><td class="mono">City_Building_M_07</td><td class="num">5.672</td><td class="num">8.255</td><td class="num">5.672 → 3.807 → 1.653</td><td class="num">11 × 28 × 16 m</td></tr></tbody>
+      </table></div>
+      <p class="note">APK'da bunlardan büyük iki mesh daha var: <span class="mono">Beta_Surface</span> 28.272 ve <span class="mono">Beta_Joints</span> 20.840 üçgen. Okuduğumuz hiçbir harita ya da prefab bunlara referans vermiyor.</p>
+    </div>
+    <div>
+      <h3>Doku belleği</h3>
+      <div class="tw"><table>
+        <thead><tr><th>Grup</th><th>Adet</th><th>Bellek</th></tr></thead>
+        <tbody>
+          <tr><td>Tüm benzersiz dokular</td><td class="num">1.221</td><td class="num">215,5 MB</td></tr>
+          <tr><td>UI paketlerindeki dokular</td><td class="num">—</td><td class="num">43,8 MB</td></tr>
+          <tr><td>Sıkıştırmasız RGBA32 (çoğu UI)</td><td class="num">164</td><td class="num">41,8 MB</td></tr>
+          <tr><td>3D dünya dokuları</td><td class="num">89</td><td class="num">66,6 MB</td></tr>
+          <tr><td><span class="sub" style="display:inline">↳</span> VAT atlasları (RGB24, mip yok)</td><td class="num">20</td><td class="num">33,8 MB</td></tr>
+          <tr><td><span class="sub" style="display:inline">↳</span> SodaCan 2048² PBR seti (albedo, specular, normal)</td><td class="num">3</td><td class="num">10,9 MB</td></tr>
+          <tr><td><span class="sub" style="display:inline">↳</span> Şehir ana atlası + zemin atlası + karakter dokusu</td><td class="num">3</td><td class="num">≈ 1,9 MB</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note">Format dağılımı (tüm dokular): ETC2 RGBA8 626, ASTC 4×4 187, RGBA32 164, ETC2 RGB 77, ASTC 6×6 46, ETC2 Crunched 43, RGB24 29. 3D dünyada ASTC kullanılmamış: ETC2 RGB 43, RGB24 22 (VAT), ETC2 RGBA8 11, Crunched 10. Bellek, GPU'daki boyutu verir; Crunched dokular diskte daha küçüktür (karakter dokusu diskte 81 KB, GPU'da 1 MB).</p>
+    </div>
+  </div>
+</section>
+
+<section id="teknik">
+  <h2><span class="secnum">6</span>Mesh ayarları</h2>
+  <p>Oyunda kullanılan 1.271 benzersiz mesh üzerinden. <span class="tag obs">Gözlem</span></p>
+  <div class="tw"><table>
+    <thead><tr><th>Ayar</th><th>Değer</th><th>Not</th></tr></thead>
+    <tbody>
+      <tr><td>Index formatı</td><td class="num">16-bit 1.257 · 32-bit 14</td><td>32-bit yalnız 65 bin vertex'i aşan birleşik mesh'lerde gerekir.</td></tr>
+      <tr><td>Submesh</td><td class="num">1 submesh: 1.252 (%98,5)</td><td>Obje başına tek materyal.</td></tr>
+      <tr><td>UV kanalı</td><td class="num">1 set: 1.173 (%92) · 0 set: 35 · 2+ set: 63</td><td>Lightmap kullanılmadığı için ikinci UV setine gerek kalmıyor.</td></tr>
+      <tr><td>Normal</td><td class="num">1.245 mesh</td><td>Şehir mesh'lerinin çoğunda normal ve UV yarım hassasiyette (f16), pozisyon f32.</td></tr>
+      <tr><td>Tangent</td><td class="num">243 (%19)</td><td>Normal map olmadığı halde var; gereksiz veri.</td></tr>
+      <tr><td>Vertex color</td><td class="num">246 (%19)</td><td>Ana boyama yöntemi değil, ek kanal.</td></tr>
+      <tr><td>Mesh compression</td><td class="num">Kapalı 1.251 · High 20</td><td>High: insan ve hayvan mesh'leri, birkaç <span class="mono">SM_*</span> prop.</td></tr>
+      <tr><td>Read/Write</td><td class="num">Açık 90</td><td>Çoğu karakter mesh'i ve <span class="mono">*_MeshCollider_0</span> çarpışma mesh'leri.</td></tr>
+      <tr><td>Skinned / blendshape</td><td class="num">50 / 0</td><td>Bindpose'lu 50 mesh var ama haritalarda insanlar VAT ile oynuyor.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="sahne">
+  <h2><span class="secnum">7</span>Sahne ve çizim</h2>
+  <div class="two">
+    <div>
+      <h3>Işık, gölge, batching</h3>
+      <ul class="facts">
+        <li><span class="tag obs">Gözlem</span>Işığı olan her haritada tek directional ışık var (şehirde 20 sahne, meyvede 6 sahne): Realtime, sert gölge (Hard). FTUE_03 ve FTUE_10 sahnelerinde ışık yok. 31 sahne ayarının hiçbirinde lightmap yok. 20 sahnede lineer sis açık.</li>
+        <li><span class="tag obs">Gözlem</span>Renderer'ların neredeyse hepsi gölge düşürüyor (ör. M_Diego_City: 1.612 aktif renderer, 1.611 caster). Dünya objeleri için blob gölge mesh'i ya da dokusu bulunmadı; adında "shadow" geçen dokular UI'ya ait.</li>
+        <li><span class="tag obs">Gözlem</span>SRP Batcher dört kalitede de açık. Dinamik batching yalnız High'da açık. Master Shader materyallerinde GPU instancing işareti açık (409 materyalin 95'i). GPU Resident Drawer kapalı.</li>
+        <li><span class="tag obs">Gözlem</span>Şehir haritalarında statik batching yok (0 renderer). City haritasında zemin 14 adet <span class="mono">Static_GridCell_x_y</span> hücresine önceden birleştirilmiş. Diğer haritalardaki <span class="mono">LegacyMap</span> bileşeninde <span class="mono">combine</span> ve <span class="mono">groundCombine</span> alanları var; zemin çalışma anında birleştiriliyor olabilir <span class="tag inf">Çıkarım</span>. Meyve (FTUE) haritalarında statik batching var: harita başına 129–422 renderer, 6–9 birleşik grup.</li>
+        <li><span class="tag obs">Gözlem</span>Aynı mesh tekrar tekrar kullanılıyor: şehir haritasında renderer başına benzersiz mesh oranı 5,3 – 49,1×. Harita başına 44 – 174 benzersiz mesh.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>URP kalite kademeleri</h3>
+      <div class="tw"><table>
+        <thead><tr><th>Kademe</th><th>Shadowmap</th><th>Gölge mesafesi</th><th>Ek ışık</th><th>Dinamik batch</th></tr></thead>
+        <tbody>
+          <tr><td>VeryLowEnd</td><td class="num">1024</td><td class="num">15 m</td><td>vertex</td><td>kapalı</td></tr>
+          <tr><td>Low</td><td class="num">512</td><td class="num">15 m</td><td>kapalı</td><td>kapalı</td></tr>
+          <tr><td>Mid</td><td class="num">2048</td><td class="num">15 m</td><td>vertex</td><td>kapalı</td></tr>
+          <tr><td>High</td><td class="num">4096</td><td class="num">300 m</td><td>pixel</td><td>açık</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note">Hepsinde: 1 cascade, soft shadow kapalı, HDR kapalı, MSAA yok, render scale 1,0, depth/opaque texture kapalı, LOD cross-fade açık. QualitySettings lodBias 0,3 / 0,4 / 0,7 / 2,0 ama özel LOD sistemi bunu kullanmıyor olabilir. <span class="tag inf">Çıkarım</span></p>
+    </div>
+  </div>
+
+  <h3>Harita başına ölçüm ve görünür kısım tahmini</h3>
+  <p>Soldaki sütunlar haritanın tamamı için dosyadan ölçüldü <span class="tag obs">Gözlem</span>. Turuncu sütunlar, harita merkezinde portre ekranın tepeden gördüğü pencerede kalan renderer / üçgen sayısıdır <span class="tag inf">Tahmin</span>. Pencere: dikey FOV 60°, en-boy 9:19,5, kamera yüksekliği H. Her H için o delik boyuna denk gelen LOD seviyesi sayıldı (H20 → LOD0, H40 → LOD1, H80 → LOD2).</p>
+  <div class="tw"><table>
+    <thead><tr><th>Harita</th><th>Biyom</th><th>Aktif renderer</th><th>Benzersiz mesh</th><th>Tekrar</th><th>Üçgen LOD0</th><th>LOD1</th><th>LOD2</th><th>Materyal</th><th>Statik batch</th><th class="est">H20 renderer / üçgen</th><th class="est">H40</th><th class="est">H80</th></tr></thead>
+    <tbody><tr><td class="mono">City</td><td>Şehir</td><td class="num">1.736</td><td class="num">116</td><td class="num">15,0×</td><td class="num">905.001</td><td class="num">537.064</td><td class="num">307.767</td><td class="num">6</td><td class="num">0</td><td class="num est">11 / 5.219</td><td class="num est">59 / 48.628</td><td class="num est">132 / 52.271</td></tr>
+<tr><td class="mono">FTUE_03</td><td>Meyve (FTUE)</td><td class="num">878</td><td class="num">6</td><td class="num">146,3×</td><td class="num">298.158</td><td class="num">—</td><td class="num">—</td><td class="num">9</td><td class="num">284</td><td class="num est">76 / 40.572</td><td class="num est">289 / 146.724</td><td class="num est">606 / 267.760</td></tr>
+<tr><td class="mono">FTUE_04</td><td>Meyve (FTUE)</td><td class="num">277</td><td class="num">10</td><td class="num">27,7×</td><td class="num">43.012</td><td class="num">—</td><td class="num">—</td><td class="num">11</td><td class="num">129</td><td class="num est">25 / 9.666</td><td class="num est">147 / 36.606</td><td class="num est">260 / 42.444</td></tr>
+<tr><td class="mono">FTUE_05</td><td>Meyve (FTUE)</td><td class="num">309</td><td class="num">8</td><td class="num">38,6×</td><td class="num">13.530</td><td class="num">—</td><td class="num">—</td><td class="num">11</td><td class="num">173</td><td class="num est">43 / 2.582</td><td class="num est">109 / 6.120</td><td class="num est">297 / 13.122</td></tr>
+<tr><td class="mono">FTUE_06</td><td>Meyve (FTUE)</td><td class="num">525</td><td class="num">10</td><td class="num">52,5×</td><td class="num">63.116</td><td class="num">—</td><td class="num">—</td><td class="num">12</td><td class="num">293</td><td class="num est">99 / 31.410</td><td class="num est">168 / 43.738</td><td class="num est">267 / 55.288</td></tr>
+<tr><td class="mono">FTUE_07</td><td>Meyve (FTUE)</td><td class="num">364</td><td class="num">9</td><td class="num">40,4×</td><td class="num">31.402</td><td class="num">—</td><td class="num">—</td><td class="num">11</td><td class="num">235</td><td class="num est">14 / 2.902</td><td class="num est">70 / 9.962</td><td class="num est">239 / 26.804</td></tr>
+<tr><td class="mono">FTUE_08</td><td>Meyve (FTUE)</td><td class="num">922</td><td class="num">16</td><td class="num">57,6×</td><td class="num">152.724</td><td class="num">—</td><td class="num">—</td><td class="num">17</td><td class="num">188</td><td class="num est">15 / 870</td><td class="num est">236 / 30.382</td><td class="num est">575 / 94.146</td></tr>
+<tr><td class="mono">FTUE_09</td><td>Meyve (FTUE)</td><td class="num">992</td><td class="num">6</td><td class="num">165,3×</td><td class="num">295.348</td><td class="num">—</td><td class="num">—</td><td class="num">8</td><td class="num">422</td><td class="num est">29 / 12.902</td><td class="num est">83 / 20.532</td><td class="num est">300 / 95.234</td></tr>
+<tr><td class="mono">FTUE_10</td><td>Meyve (FTUE)</td><td class="num">412</td><td class="num">8</td><td class="num">51,5×</td><td class="num">34.112</td><td class="num">—</td><td class="num">—</td><td class="num">11</td><td class="num">247</td><td class="num est">48 / 9.918</td><td class="num est">112 / 18.554</td><td class="num est">259 / 29.658</td></tr>
+<tr><td class="mono">M_NeedForHole</td><td>Şehir</td><td class="num">3.741</td><td class="num">78</td><td class="num">48,0×</td><td class="num">1.879.465</td><td class="num">1.529.554</td><td class="num">1.391.434</td><td class="num">10</td><td class="num">0</td><td class="num est">52 / 30.150</td><td class="num est">202 / 49.220</td><td class="num est">541 / 168.875</td></tr>
+<tr><td class="mono">M_StoreyTime</td><td>Şehir</td><td class="num">4.221</td><td class="num">94</td><td class="num">44,9×</td><td class="num">529.687</td><td class="num">335.098</td><td class="num">229.954</td><td class="num">10</td><td class="num">0</td><td class="num est">57 / 5.181</td><td class="num est">199 / 26.163</td><td class="num est">880 / 79.096</td></tr>
+<tr><td class="mono">S_BeachCleanup_01</td><td>Şehir</td><td class="num">1.340</td><td class="num">44</td><td class="num">30,5×</td><td class="num">408.087</td><td class="num">292.319</td><td class="num">216.759</td><td class="num">10</td><td class="num">0</td><td class="num est">135 / 31.766</td><td class="num est">443 / 79.883</td><td class="num est">968 / 153.568</td></tr>
+<tr><td class="mono">CityDensity</td><td>Şehir</td><td class="num">4.410</td><td class="num">133</td><td class="num">33,2×</td><td class="num">1.045.781</td><td class="num">605.595</td><td class="num">327.514</td><td class="num">9</td><td class="num">0</td><td class="num est">25 / 8.140</td><td class="num est">96 / 21.312</td><td class="num est">337 / 28.979</td></tr>
+<tr><td class="mono">L_Adria_Kaiju</td><td>Şehir</td><td class="num">2.505</td><td class="num">174</td><td class="num">14,4×</td><td class="num">621.497</td><td class="num">366.662</td><td class="num">231.785</td><td class="num">7</td><td class="num">0</td><td class="num est">28 / 1.546</td><td class="num est">84 / 6.413</td><td class="num est">360 / 26.149</td></tr>
+<tr><td class="mono">L_Aleksandr_City_Islands</td><td>Şehir</td><td class="num">2.370</td><td class="num">155</td><td class="num">15,3×</td><td class="num">579.322</td><td class="num">367.267</td><td class="num">213.720</td><td class="num">7</td><td class="num">0</td><td class="num est">35 / 4.703</td><td class="num est">110 / 12.486</td><td class="num est">402 / 27.362</td></tr>
+<tr><td class="mono">L_SandBoxBlocks_01</td><td>Şehir</td><td class="num">2.896</td><td class="num">59</td><td class="num">49,1×</td><td class="num">667.038</td><td class="num">383.959</td><td class="num">233.971</td><td class="num">5</td><td class="num">0</td><td class="num est">83 / 18.538</td><td class="num est">241 / 42.088</td><td class="num est">850 / 83.504</td></tr>
+<tr><td class="mono">M_Adria_Invasion</td><td>Şehir</td><td class="num">1.624</td><td class="num">123</td><td class="num">13,2×</td><td class="num">319.753</td><td class="num">227.467</td><td class="num">164.404</td><td class="num">8</td><td class="num">0</td><td class="num est">20 / 5.130</td><td class="num est">67 / 6.642</td><td class="num est">276 / 26.877</td></tr>
+<tr><td class="mono">M_Aleksandr_City</td><td>Şehir</td><td class="num">1.616</td><td class="num">111</td><td class="num">14,6×</td><td class="num">471.277</td><td class="num">276.680</td><td class="num">151.368</td><td class="num">4</td><td class="num">0</td><td class="num est">23 / 7.076</td><td class="num est">103 / 15.082</td><td class="num est">464 / 41.139</td></tr>
+<tr><td class="mono">M_Diego_City</td><td>Şehir</td><td class="num">1.612</td><td class="num">87</td><td class="num">18,5×</td><td class="num">845.036</td><td class="num">487.237</td><td class="num">354.699</td><td class="num">8</td><td class="num">0</td><td class="num est">20 / 14.559</td><td class="num est">81 / 46.352</td><td class="num est">289 / 101.308</td></tr>
+<tr><td class="mono">M_Eduardo_Medium01</td><td>Şehir</td><td class="num">1.564</td><td class="num">125</td><td class="num">12,5×</td><td class="num">454.928</td><td class="num">261.133</td><td class="num">156.878</td><td class="num">13</td><td class="num">0</td><td class="num est">35 / 8.874</td><td class="num est">104 / 13.014</td><td class="num est">446 / 36.313</td></tr>
+<tr><td class="mono">S_Adria_Alley3</td><td>Şehir</td><td class="num">486</td><td class="num">92</td><td class="num">5,3×</td><td class="num">162.143</td><td class="num">73.419</td><td class="num">39.772</td><td class="num">6</td><td class="num">0</td><td class="num est">38 / 9.451</td><td class="num est">125 / 17.365</td><td class="num est">321 / 26.618</td></tr>
+<tr><td class="mono">S_Adria_Casual</td><td>Şehir</td><td class="num">1.041</td><td class="num">91</td><td class="num">11,4×</td><td class="num">198.876</td><td class="num">104.140</td><td class="num">70.822</td><td class="num">7</td><td class="num">0</td><td class="num est">31 / 5.785</td><td class="num est">97 / 14.858</td><td class="num est">361 / 42.590</td></tr>
+<tr><td class="mono">S_Adria_Casual_TEST</td><td>Şehir</td><td class="num">1.261</td><td class="num">98</td><td class="num">12,9×</td><td class="num">273.657</td><td class="num">142.151</td><td class="num">94.627</td><td class="num">8</td><td class="num">0</td><td class="num est">28 / 5.996</td><td class="num est">114 / 18.126</td><td class="num est">447 / 49.436</td></tr>
+<tr><td class="mono">S_Aleksandr_UFO2</td><td>Şehir</td><td class="num">1.176</td><td class="num">81</td><td class="num">14,5×</td><td class="num">131.855</td><td class="num">83.512</td><td class="num">52.924</td><td class="num">5</td><td class="num">0</td><td class="num est">37 / 6.781</td><td class="num est">144 / 18.141</td><td class="num est">481 / 30.001</td></tr>
+<tr><td class="mono">S_Aleksandr_UFO_NEW</td><td>Şehir</td><td class="num">1.330</td><td class="num">87</td><td class="num">15,3×</td><td class="num">207.507</td><td class="num">113.912</td><td class="num">71.033</td><td class="num">7</td><td class="num">0</td><td class="num est">50 / 16.905</td><td class="num est">162 / 21.571</td><td class="num est">547 / 42.346</td></tr>
+<tr><td class="mono">S_Diego_City001</td><td>Şehir</td><td class="num">1.018</td><td class="num">71</td><td class="num">14,3×</td><td class="num">264.255</td><td class="num">130.744</td><td class="num">73.175</td><td class="num">4</td><td class="num">0</td><td class="num est">24 / 5.006</td><td class="num est">141 / 19.578</td><td class="num est">475 / 34.290</td></tr>
+<tr><td class="mono">S_Nacho_Restaurant</td><td>Şehir</td><td class="num">414</td><td class="num">71</td><td class="num">5,8×</td><td class="num">181.997</td><td class="num">76.738</td><td class="num">30.727</td><td class="num">10</td><td class="num">0</td><td class="num est">43 / 20.896</td><td class="num est">85 / 20.466</td><td class="num est">279 / 23.967</td></tr></tbody>
+  </table></div>
+  <p class="note">Meyve haritalarında LOD değiştirici yok, LOD1/LOD2 sütunu boş. Üçgen toplamı, her renderer'ın o LOD seviyesindeki mesh'inin üçgeniyle hesaplandı; statik batch'lenmiş renderer'lar birleşik mesh'teki kendi submesh aralığıyla sayıldı.</p>
+
+  <div class="two">
+    <div>
+      <h3>Şehir haritaları özeti (19 harita)</h3>
+      <div class="tw"><table>
+        <thead><tr><th>Ölçü</th><th>Aralık</th><th>Medyan</th></tr></thead>
+        <tbody>
+          <tr><td>Aktif renderer</td><td class="num">414 – 4.410</td><td class="num">1.612</td></tr>
+          <tr><td>Harita üçgeni, LOD0</td><td class="num">131.855 – 1.879.465</td><td class="num">454.928</td></tr>
+          <tr><td>Harita üçgeni, LOD2</td><td class="num">30.727 – 1.391.434</td><td class="num">164.404</td></tr>
+          <tr><td>Materyal</td><td class="num">4 – 13</td><td class="num">7</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div>
+      <h3>Aynı anda çizilen tahmini yük</h3>
+      <div class="tw"><table>
+        <thead><tr><th>H</th><th>Pencere</th><th>LOD</th><th class="est">Renderer ≈ draw call</th><th class="est">Üçgen</th></tr></thead>
+        <tbody><tr><td class="num">20 m</td><td class="num">≈ 11 × 23 m</td><td>LOD0</td><td class="num est">11 – 135 <span class="sub">medyan 35</span></td><td class="num est">1.546 – 31.766 <span class="sub">medyan 7.076</span></td></tr>
+<tr><td class="num">40 m</td><td class="num">≈ 21 × 46 m</td><td>LOD1</td><td class="num est">59 – 443 <span class="sub">medyan 110</span></td><td class="num est">6.413 – 79.883 <span class="sub">medyan 19.578</span></td></tr>
+<tr><td class="num">80 m</td><td class="num">≈ 43 × 92 m</td><td>LOD2</td><td class="num est">132 – 968 <span class="sub">medyan 446</span></td><td class="num est">23.967 – 168.875 <span class="sub">medyan 41.139</span></td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+  <div class="callout">
+    <b>Draw call nasıl okunmalı.</b> Ölçülen: renderer'ların %98,5'i tek submesh, yani görünen her renderer bir draw call. SRP Batcher draw sayısını azaltmaz, materyal değişim maliyetini azaltır; harita başına materyal sayısı 4–13 olduğu için SetPass sayısı da bu civarda kalır <span class="tag inf">Çıkarım</span>. Gölge geçişi, gölge mesafesindeki caster'lar kadar ek draw getirir: alt kademelerde 15 m çok kısa, High'da 300 m ile görünen draw sayısı yaklaşık iki katına çıkar <span class="tag inf">Tahmin</span>. Gerçek kamera eğik baktığı için görünen alan bu dikdörtgenlerden büyüktür; tablodaki sayılar alt sınıra yakın okunmalı.
+  </div>
+</section>
+
+<section id="stil">
+  <h2><span class="secnum">8</span>Stil kuralları</h2>
+  <div class="two">
+    <div>
+      <h3>Şehir biyomu</h3>
+      <ul class="facts">
+        <li><span class="tag obs">Gözlem</span>Low-poly. LOD0 medyanları 84 (koni) ile 1.800 (insan) arasında.</li>
+        <li><span class="tag obs">Gözlem</span>Medyan mesh'te üçgenlerin UV alanı sıfır olan payı: ağaç %100, insan %100, araba %97, bina %96, sokak eşyası %92. Yani yüzler atlasta bir noktaya ya da çizgiye bakıyor.</li>
+        <li><span class="tag obs">Gözlem</span>Ana atlas 1024² ETC2 RGB: 6.971 farklı renk (15-bit), en sık 64 renk pikselin %68'i. Düz renk blokları kısa (medyan 3 px, %90'lık dilim 18 px).</li>
+        <li><span class="tag inf">Çıkarım</span>Saf 32×32 renk paleti değil; palet hücreleri ve gradyan şeritlerinden oluşan bir atlas. UV'ler yüz başına tek renk seçiyor, bazı yüzler gradyan boyunca uzanıyor.</li>
+        <li><span class="tag obs">Gözlem</span>Vertex color ikincil: <span class="mono">Vertex_Color_Lit</span> materyali şehir haritalarındaki slotların %2,3'ü (872 / 37.218), zemin varyantı 566.</li>
+        <li><span class="tag obs">Gözlem</span>Dünya objelerinde normal map yok. Tek istisnalar SodaCan (2048² PBR seti) ve diorama sularındaki dalga normal'i.</li>
+        <li><span class="tag inf">Çıkarım</span>Vertex/üçgen oranı bina 1,36, sokak eşyası 1,32, araba 1,17: sert kenarlar, yüzlü (faceted) görünüm. Ağaçta 0,92, insanda 0,77: daha yumuşak gölgeleme.</li>
+        <li><span class="tag inf">Çıkarım</span><span class="mono">PolygonCity_*</span>, <span class="mono">SM_Prop_*</span>, <span class="mono">SM_Item_*</span> adları hazır low-poly paket adlandırmasına uyuyor; içeriğin bir kısmı hazır paketlerden uyarlanmış olabilir.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Meyve biyomu ve diğerleri</h3>
+      <ul class="facts">
+        <li><span class="tag obs">Gözlem</span>Meyve biyomu farklı bir yol izliyor: obje başına kendi dokusu (Berries 256², Orange 512², Turnip ve Strawberries 1024², ETC2 RGB), gerçek UV açılımı, yumuşak normaller (Orange 170 vertex / 256 üçgen).</li>
+        <li><span class="tag obs">Gözlem</span>Meyve haritalarında zemin, su ve kayalar dokusuz Shader Graph'lerle çiziliyor: <span class="mono">Grass_Checker_SHD</span>, <span class="mono">Rock_Procedural_SHD</span>, <span class="mono">Water_Ripples</span>.</li>
+        <li><span class="tag obs">Gözlem</span>Master Shader anahtar kelimeleri: <span class="mono">_MS_USE_TEXTURE</span>, <span class="mono">_MS_USE_VERTEX_COLOR</span>, <span class="mono">_MS_USE_MATCAP</span>, <span class="mono">_MS_USE_VAT</span>, <span class="mono">_MS_USE_GLOW</span>, <span class="mono">_MS_FORCE_UNLIT</span>, <span class="mono">_SPECULAR_SETUP</span>, <span class="mono">_ALPHATEST_ON</span>. Para ve elmaslar matcap ile boyanıyor (128–256² matcap dokusu).</li>
+        <li><span class="tag inf">Çıkarım</span>Para materyalinde görülen <span class="mono">TCP2_*</span> anahtar kelimeleri, uber shader'ın Toony Colors Pro 2 tabanından türetildiğini düşündürüyor.</li>
+        <li><span class="tag obs">Gözlem</span>VAT: 347 klip, 271'i 15 fps, 76'sı 30 fps; en yaygın kare sayıları 30, 10, 26, 15. Klip başına medyan 1.167 vertex. 20 VAT atlası RGB24, mip yok, 814–1.919 × 359–549 px.</li>
+        <li><span class="tag obs">Gözlem</span>İsim kuralı: <span class="mono">&lt;Biyom&gt;_&lt;Kategori&gt;_&lt;S|M|L|XL&gt;_&lt;Ad&gt;_LOD&lt;n&gt;</span> (ör. <span class="mono">City_Vehicles_S_Taxi_LOD1</span>). S/M/L boyut sınıfı adın içinde.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="oneri">
+  <h2><span class="secnum">9</span>Bizim için öneri</h2>
+  <p>Ölçülen medyan ve tavanlardan türetilmiş başlangıç bütçesi. Scenario ve Tripo çıktıları genelde on binlerce üçgen ve PBR doku setiyle gelir; aşağıdaki sayılar bu çıktıların hangi seviyeye indirilmesi gerektiğini gösterir.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Kategori</th><th>LOD0 hedef</th><th>Tavan</th><th>LOD1</th><th>LOD2</th><th>Doku</th><th>Shader</th><th>Palet / atlas</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Araba</th><td class="num">1.200</td><td class="num">1.700</td><td class="num">~650 (%55)</td><td class="num">~400 (%33)</td><td>ortak palet atlası</td><td>tek uber lit</td><td>tüm araçlar tek atlasta</td></tr>
+      <tr><th scope="row">İnsan</th><td class="num">1.500</td><td class="num">2.200</td><td class="num">~450 (%30)</td><td class="num">~100 (%5)</td><td>tek karakter dokusu 1024² + VAT</td><td>uber lit + VAT</td><td>tüm insanlar tek dokuda</td></tr>
+      <tr><th scope="row">Ağaç / bitki</th><td class="num">800</td><td class="num">2.300</td><td class="num">~450 (%58)</td><td class="num">~200 (%23)</td><td>ortak palet atlası</td><td>tek uber lit</td><td>evet</td></tr>
+      <tr><th scope="row">Bina (standart)</th><td class="num">900–2.000</td><td class="num">landmark 12.000</td><td class="num">%65</td><td class="num">%35</td><td>ortak palet atlası</td><td>tek uber lit</td><td>modüler kat parçaları</td></tr>
+      <tr><th scope="row">Sokak eşyası</th><td class="num">300 (S) · 1.000 (M)</td><td class="num">4.300</td><td class="num">%55</td><td class="num">%28</td><td>ortak palet atlası</td><td>tek uber lit</td><td>evet</td></tr>
+      <tr><th scope="row">Küçük obje / yiyecek</th><td class="num">300</td><td class="num">1.000</td><td class="num">%60</td><td class="num">%30</td><td>palet atlası; öne çıkan yiyecek için kendi 256–512² dokusu</td><td>tek uber lit</td><td>şehirde evet, yiyecek biyomunda isteğe bağlı</td></tr>
+      <tr><th scope="row">Zemin / yol</th><td class="num">5 m karo ≤ 25</td><td class="num">100 m hücre 6.000</td><td class="num">%85</td><td class="num">%60</td><td>512² zemin atlası, alpha test</td><td>tek uber lit</td><td>karo + önceden birleşik hücre</td></tr>
+      <tr><th scope="row">Oyuncu deliği</th><td class="num">300–1.200</td><td class="num">1.500</td><td class="num">—</td><td class="num">—</td><td>512² unlit</td><td>unlit + stencil maske</td><td>skin'ler tek dokuyu paylaşır</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Üretimden sonra uygulanacak adımlar</h3>
+  <ol class="steps">
+    <li>Mesh'i LOD0 hedefine indir (decimate ya da retopo). Siluet korunsun, 30–40°'nin üstündeki kenarlar sert kalsın.</li>
+    <li>LOD1'i %55, LOD2'yi %30 civarında üret. İnsanlarda %30 ve %5 yeterli; uzak seviyede silüet kalması yetiyor.</li>
+    <li>Normal, roughness ve metallic haritalarını at. Rengi ortak 1024² palet atlasına taşı: her yüz ya da renk bölgesi UV'sini bir palet hücresine (ya da gradyan şeridine) çeksin. Alternatif olarak rengi vertex color'a bake et.</li>
+    <li>Import ayarları: tek UV seti, tangent yok, 16-bit index, Read/Write kapalı, normal ve UV için yarım hassasiyet (vertex compression), mesh compression kapalı.</li>
+    <li>Biyom başına tek materyal, tek uber shader. Doku formatı ETC2 RGB ya da ASTC 6×6, mipmap açık.</li>
+    <li>LOD'u ekran boyutuna değil oyun durumuna bağla (bizde delik seviyesi gibi bir büyüklük değeri). Gölge için tek realtime directional, sert gölge, kısa gölge mesafesi.</li>
+    <li>Kalabalık insanlar için iskelet yerine VAT kullan; 15 fps, klip başına 10–30 kare. VAT atlaslarını sıkıştırılmış ya da daha küçük formatta tut: Hole.io'da 20 atlas sıkıştırmasız 33,8 MB yer kaplıyor.</li>
+  </ol>
+</section>
+
+<section id="okunamadi">
+  <h2><span class="secnum">10</span>Okunamadı ya da kapsam dışı</h2>
+  <ul class="facts">
+    <li><span class="tag na">Okunamadı</span>Uzaktan inen biyomlar (Sci-Fi, Pirates, Jurassic, Winter, Mars ve diğerleri). APK'da yalnız diorama önizlemeleri var; haritalar Addressables uzak kataloğundan iniyor. İndirilmedi.</li>
+    <li><span class="tag na">Okunamadı</span><span class="mono">City_Biome.unity</span> boş; harita çalışma anında bir veri kaynağından kuruluyor (<span class="mono">RuntimeMap</span>).</li>
+    <li><span class="tag na">Okunamadı</span>Kameranın delik boyuna göre yüksekliği. Kod IL2CPP içinde. Okunabilen başlangıç değerleri: FOV 60–65°, framing mesafesi 10, orbital ofsetler (0, 80, −10), (0, 17,5, −19,5), (0, 75, −50), boya göre ek FOV −8° ile +12° arası.</li>
+    <li><span class="tag na">Okunamadı</span>Gerçek draw call ve batch sayısı. Bunun için cihazda frame capture gerekir.</li>
+    <li><span class="tag na">Okunamadı</span>Master Shader'da çalışma anında SRP Batcher mı GPU instancing mi devreye giriyor. Shader derlenmiş halde.</li>
+    <li><span class="tag na">Okunamadı</span>Gölge mesafesinin oyun sırasında koddan değiştirilip değiştirilmediği (alt kademelerde 15 m, kamera mesafesine göre çok kısa).</li>
+  </ul>
+</section>
+
+<section id="yontem">
+  <h2><span class="secnum">11</span>Yöntem</h2>
+  <ul class="facts">
+    <li>XAPK açıldı: <span class="mono">io.voodoo.holeio.apk</span> + <span class="mono">config.arm64_v8a.apk</span>. Motor <span class="mono">libunity.so</span> içindeki sürüm dizesinden (6000.3.21f1), IL2CPP <span class="mono">libil2cpp.so</span> ve <span class="mono">global-metadata.dat</span> varlığından belirlendi.</li>
+    <li>86 Addressables paketi (156 MB) ve <span class="mono">data.unity3d</span> UnityPy 1.25 ile bellekte okundu. Hiçbir mesh, doku ya da ses diske yazılmadı; yalnız sayılar çıkarıldı. Atlas renk istatistiği de bellekte hesaplandı.</li>
+    <li>"Oyunda kullanılan" mesh: haritalardaki ve prefab'lardaki renderer'ların ya da <span class="mono">LODMeshSwitcher</span>'ların referans verdiği mesh. Yalnız FBX taşıyıcısı olan, varsayılan Lit materyalli model prefab'ları sayılmadı.</li>
+    <li>Kategoriler mesh adından atandı; LOD zincirleri <span class="mono">LODMeshSwitcher.lodMeshes</span> listelerinden; dünya konumları Transform hiyerarşisinden hesaplandı.</li>
+    <li>Lisans ya da DRM koruması aşılmadı; uzak sunucudan içerik çekilmedi.</li>
+  </ul>
+</section>
+
+<footer>Hole.io 2.58.3 Android paketi üzerinde yapılan teknik ölçüm. Yalnız sayılar ve gözlemler içerir; oyunun asset'leri yeniden kullanılmamıştır.</footer>
+</div>
+</body>
+</html>
